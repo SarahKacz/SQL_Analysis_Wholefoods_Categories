@@ -1,0 +1,314 @@
+USE bos_fmban_sql_analysis;
+-- Creating a CTE for normalized categoris calculating the ratio with no duplicates in product id
+
+WITH ratio AS(
+ SELECT 
+ CASE WHEN category LIKE '%DAIRY%' THEN 'DAIRY AND EGGS'
+WHEN category LIKE '%PRODUCE%' THEN 'PRODUCE'
+WHEN category LIKE '%MEAT%' THEN 'MEAT'
+WHEN category LIKE '%PANT%' THEN 'PANTRY ESSENTIALS'
+WHEN category LIKE '%BREAD%' THEN 'BREAD ROLL BAKERY'
+WHEN category LIKE '%DESSERT%' THEN 'DESSERTS'
+WHEN category LIKE '%BODY%' THEN 'BODY CARE'
+WHEN category LIKE '%FROZEN%' THEN 'FROZEN FOOD'
+WHEN category LIKE '%SNACK%' THEN 'SNACKS CHIPS SALSA'
+WHEN category LIKE '%BEV%' THEN 'BEVERAGES'
+ELSE 'Not_signifcant' END AS categories,
+((COUNT(CASE WHEN (BRAND LIKE '%365%' OR BRAND LIKE '%WHOLE FOODS MARKET%')
+THEN ID ELSE NULL END))
+ /(COUNT(ID)))*100 AS ratio
+FROM (
+SELECT DISTINCT ID,
+category,
+BRAND
+FROM bfmban_data) AS no_duplicates
+GROUP BY categories),
+
+-- Creating a CTE with normalized categories counting non Whole Foods and Whole Foods products with no duplicates
+BRANDS AS(
+SELECT 
+ CASE WHEN category LIKE '%DAIRY%' THEN 'DAIRY AND EGGS'
+WHEN category LIKE '%PRODUCE%' THEN 'PRODUCE'
+WHEN category LIKE '%MEAT%' THEN 'MEAT'
+WHEN category LIKE '%PANT%' THEN 'PANTRY ESSENTIALS'
+WHEN category LIKE '%BREAD%' THEN 'BREAD ROLL BAKERY'
+WHEN category LIKE '%DESSERT%' THEN 'DESSERTS'
+WHEN category LIKE '%BODY%' THEN 'BODY CARE'
+WHEN category LIKE '%FROZEN%' THEN 'FROZEN FOOD'
+WHEN category LIKE '%SNACK%' THEN 'SNACKS CHIPS SALSA'
+WHEN category LIKE '%BEV%' THEN 'BEVERAGES'
+ELSE 'Not_signifcant' END AS categories,
+COUNT(CASE WHEN (BRAND LIKE '%365%' OR BRAND LIKE '%WHOLE FOODS MARKET%') THEN ID ELSE NULL END)
+AS wf_products,
+COUNT(CASE WHEN (BRAND NOT LIKE '%365%'AND BRAND NOT LIKE '%WHOLE FOODS MARKET%') THEN ID ELSE NULL END) AS non_wf
+FROM (
+SELECT DISTINCT ID,
+category,
+BRAND
+FROM bfmban_data) AS no_duplicates
+GROUP BY CATEGORies)
+
+-- Joining both CTEs to see ratios for Whole Foods and non Whole Foods products for all products
+SELECT 
+ratio.categories,
+ratio.ratio,
+brands.non_wf,
+brands.wf_products
+FROM ratio
+INNER JOIN brands USING(CATEGORIES)
+;
+
+-- Additional Insights, how do the proportions change for vegan and vegetarian products
+
+WITH ratio AS(
+ SELECT 
+ CASE WHEN category LIKE '%DAIRY%' THEN 'DAIRY AND EGGS'
+WHEN category LIKE '%PRODUCE%' THEN 'PRODUCE'
+WHEN category LIKE '%MEAT%' THEN 'MEAT'
+WHEN category LIKE '%PANT%' THEN 'PANTRY ESSENTIALS'
+WHEN category LIKE '%BREAD%' THEN 'BREAD ROLL BAKERY'
+WHEN category LIKE '%DESSERT%' THEN 'DESSERTS'
+WHEN category LIKE '%BODY%' THEN 'BODY CARE'
+WHEN category LIKE '%FROZEN%' THEN 'FROZEN FOOD'
+WHEN category LIKE '%SNACK%' THEN 'SNACKS CHIPS SALSA'
+WHEN category LIKE '%BEV%' THEN 'BEVERAGES'
+ELSE 'Not_signifcant' END AS categories,
+((COUNT(CASE WHEN (BRAND LIKE '%365%' OR BRAND LIKE '%WHOLE FOODS MARKET%')
+THEN ID ELSE NULL END))
+ /(COUNT(ID)))*100 AS ratio
+FROM bfmban_data
+WHERE VEGETARIAN=1 OR VEGAN=1
+GROUP BY categories),
+
+BRANDS AS(
+SELECT 
+ CASE WHEN category LIKE '%DAIRY%' THEN 'DAIRY AND EGGS'
+WHEN category LIKE '%PRODUCE%' THEN 'PRODUCE'
+WHEN category LIKE '%MEAT%' THEN 'MEAT'
+WHEN category LIKE '%PANT%' THEN 'PANTRY ESSENTIALS'
+WHEN category LIKE '%BREAD%' THEN 'BREAD ROLL BAKERY'
+WHEN category LIKE '%DESSERT%' THEN 'DESSERTS'
+WHEN category LIKE '%BODY%' THEN 'BODY CARE'
+WHEN category LIKE '%FROZEN%' THEN 'FROZEN FOOD'
+WHEN category LIKE '%SNACK%' THEN 'SNACKS CHIPS SALSA'
+WHEN category LIKE '%BEV%' THEN 'BEVERAGES'
+ELSE 'Not_signifcant' END AS categories,
+COUNT(CASE WHEN (BRAND LIKE '%365%' OR BRAND LIKE '%WHOLE FOODS MARKET%') THEN ID ELSE NULL END)
+AS wf_products,
+COUNT(CASE WHEN (BRAND NOT LIKE '%365%'AND BRAND NOT LIKE '%WHOLE FOODS MARKET%') THEN ID ELSE NULL END) AS non_wf
+FROM bfmban_data
+WHERE VEGETARIAN=1 OR VEGETARIAN=1
+GROUP BY CATEGORies)
+
+
+SELECT 
+ratio.categories,
+ratio.ratio AS ratio_vegan,
+brands.non_wf,
+brands.wf_products
+FROM ratio
+INNER JOIN brands USING(CATEGORIES)
+;
+
+-- Additional Insights, how do the proportions change for organic products
+
+WITH ratio AS(
+ SELECT 
+ CASE WHEN category LIKE '%DAIRY%' THEN 'DAIRY AND EGGS'
+WHEN category LIKE '%PRODUCE%' THEN 'PRODUCE'
+WHEN category LIKE '%MEAT%' THEN 'MEAT'
+WHEN category LIKE '%PANT%' THEN 'PANTRY ESSENTIALS'
+WHEN category LIKE '%BREAD%' THEN 'BREAD ROLL BAKERY'
+WHEN category LIKE '%DESSERT%' THEN 'DESSERTS'
+WHEN category LIKE '%BODY%' THEN 'BODY CARE'
+WHEN category LIKE '%FROZEN%' THEN 'FROZEN FOOD'
+WHEN category LIKE '%SNACK%' THEN 'SNACKS CHIPS SALSA'
+WHEN category LIKE '%BEV%' THEN 'BEVERAGES'
+ELSE 'Not_signifcant' END AS categories,
+((COUNT(CASE WHEN (BRAND LIKE '%365%' OR BRAND LIKE '%WHOLE FOODS MARKET%')
+THEN ID ELSE NULL END))
+ /(COUNT(ID)))*100 AS ratio
+FROM bfmban_data
+WHERE organic=1
+GROUP BY categories),
+
+BRANDS AS(
+SELECT 
+ CASE WHEN category LIKE '%DAIRY%' THEN 'DAIRY AND EGGS'
+WHEN category LIKE '%PRODUCE%' THEN 'PRODUCE'
+WHEN category LIKE '%MEAT%' THEN 'MEAT'
+WHEN category LIKE '%PANT%' THEN 'PANTRY ESSENTIALS'
+WHEN category LIKE '%BREAD%' THEN 'BREAD ROLL BAKERY'
+WHEN category LIKE '%DESSERT%' THEN 'DESSERTS'
+WHEN category LIKE '%BODY%' THEN 'BODY CARE'
+WHEN category LIKE '%FROZEN%' THEN 'FROZEN FOOD'
+WHEN category LIKE '%SNACK%' THEN 'SNACKS CHIPS SALSA'
+WHEN category LIKE '%BEV%' THEN 'BEVERAGES'
+ELSE 'Not_signifcant' END AS categories,
+COUNT(CASE WHEN (BRAND LIKE '%365%' OR BRAND LIKE '%WHOLE FOODS MARKET%') THEN ID ELSE NULL END)
+AS wf_products,
+COUNT(CASE WHEN (BRAND NOT LIKE '%365%'AND BRAND NOT LIKE '%WHOLE FOODS MARKET%') THEN ID ELSE NULL END) AS non_wf
+FROM bfmban_data
+WHERE ORGANIC=1
+GROUP BY CATEGORIES)
+
+
+SELECT 
+ratio.categories,
+ratio.ratio AS ratio_organic,
+brands.non_wf,
+brands.wf_products
+FROM ratio
+INNER JOIN brands USING(CATEGORIES)
+;
+
+-- Additional Insights, Who do proportions change for Local products
+WITH ratio AS(
+ SELECT 
+ CASE WHEN category LIKE '%DAIRY%' THEN 'DAIRY AND EGGS'
+WHEN category LIKE '%PRODUCE%' THEN 'PRODUCE'
+WHEN category LIKE '%MEAT%' THEN 'MEAT'
+WHEN category LIKE '%PANT%' THEN 'PANTRY ESSENTIALS'
+WHEN category LIKE '%BREAD%' THEN 'BREAD ROLL BAKERY'
+WHEN category LIKE '%DESSERT%' THEN 'DESSERTS'
+WHEN category LIKE '%BODY%' THEN 'BODY CARE'
+WHEN category LIKE '%FROZEN%' THEN 'FROZEN FOOD'
+WHEN category LIKE '%SNACK%' THEN 'SNACKS CHIPS SALSA'
+WHEN category LIKE '%BEV%' THEN 'BEVERAGES'
+ELSE 'Not_signifcant' END AS categories,
+((COUNT(CASE WHEN (BRAND LIKE '%365%' OR BRAND LIKE '%WHOLE FOODS MARKET%')
+THEN ID ELSE NULL END))
+ /(COUNT(ID)))*100 AS ratio
+FROM bfmban_data
+WHERE local=1
+GROUP BY categories),
+
+BRANDS AS(
+SELECT 
+ CASE WHEN category LIKE '%DAIRY%' THEN 'DAIRY AND EGGS'
+WHEN category LIKE '%PRODUCE%' THEN 'PRODUCE'
+WHEN category LIKE '%MEAT%' THEN 'MEAT'
+WHEN category LIKE '%PANT%' THEN 'PANTRY ESSENTIALS'
+WHEN category LIKE '%BREAD%' THEN 'BREAD ROLL BAKERY'
+WHEN category LIKE '%DESSERT%' THEN 'DESSERTS'
+WHEN category LIKE '%BODY%' THEN 'BODY CARE'
+WHEN category LIKE '%FROZEN%' THEN 'FROZEN FOOD'
+WHEN category LIKE '%SNACK%' THEN 'SNACKS CHIPS SALSA'
+WHEN category LIKE '%BEV%' THEN 'BEVERAGES'
+ELSE 'Not_signifcant' END AS categories,
+COUNT(CASE WHEN (BRAND LIKE '%365%' OR BRAND LIKE '%WHOLE FOODS MARKET%') THEN ID ELSE NULL END)
+AS wf_products,
+COUNT(CASE WHEN (BRAND NOT LIKE '%365%'AND BRAND NOT LIKE '%WHOLE FOODS MARKET%') THEN ID ELSE NULL END) AS non_wf
+FROM bfmban_data
+WHERE local=1
+GROUP BY CATEGORIES)
+
+
+SELECT 
+ratio.categories,
+ratio.ratio AS ratio_local,
+brands.non_wf,
+brands.wf_products
+FROM ratio
+INNER JOIN brands USING(CATEGORIES)
+;
+
+-- Finding products that are on Sale Whole foods vs non whole foods brands
+
+WITH ratio AS(
+ SELECT 
+ CASE WHEN category LIKE '%DAIRY%' THEN 'DAIRY AND EGGS'
+WHEN category LIKE '%PRODUCE%' THEN 'PRODUCE'
+WHEN category LIKE '%MEAT%' THEN 'MEAT'
+WHEN category LIKE '%PANT%' THEN 'PANTRY ESSENTIALS'
+WHEN category LIKE '%BREAD%' THEN 'BREAD ROLL BAKERY'
+WHEN category LIKE '%DESSERT%' THEN 'DESSERTS'
+WHEN category LIKE '%BODY%' THEN 'BODY CARE'
+WHEN category LIKE '%FROZEN%' THEN 'FROZEN FOOD'
+WHEN category LIKE '%SNACK%' THEN 'SNACKS CHIPS SALSA'
+WHEN category LIKE '%BEV%' THEN 'BEVERAGES'
+ELSE 'Not_signifcant' END AS categories,
+((COUNT(CASE WHEN (BRAND LIKE '%365%' OR BRAND LIKE '%WHOLE FOODS MARKET%')
+THEN ID ELSE NULL END))
+ /(COUNT(ID)))*100 AS ratio
+FROM bfmban_data
+WHERE sale_price NOT LIKE REGULAR_PRICE
+GROUP BY categories),
+
+BRANDS AS(
+SELECT 
+ CASE WHEN category LIKE '%DAIRY%' THEN 'DAIRY AND EGGS'
+WHEN category LIKE '%PRODUCE%' THEN 'PRODUCE'
+WHEN category LIKE '%MEAT%' THEN 'MEAT'
+WHEN category LIKE '%PANT%' THEN 'PANTRY ESSENTIALS'
+WHEN category LIKE '%BREAD%' THEN 'BREAD ROLL BAKERY'
+WHEN category LIKE '%DESSERT%' THEN 'DESSERTS'
+WHEN category LIKE '%BODY%' THEN 'BODY CARE'
+WHEN category LIKE '%FROZEN%' THEN 'FROZEN FOOD'
+WHEN category LIKE '%SNACK%' THEN 'SNACKS CHIPS SALSA'
+WHEN category LIKE '%BEV%' THEN 'BEVERAGES'
+ELSE 'Not_signifcant' END AS categories,
+COUNT(CASE WHEN (BRAND LIKE '%365%' OR BRAND LIKE '%WHOLE FOODS MARKET%') THEN ID ELSE NULL END)
+AS wf_products,
+COUNT(CASE WHEN (BRAND NOT LIKE '%365%'AND BRAND NOT LIKE '%WHOLE FOODS MARKET%') THEN ID ELSE NULL END) AS non_wf
+FROM bfmban_data
+WHERE sale_price NOT LIKE REGULAR_PRICE
+GROUP BY CATEGORIES)
+
+SELECT 
+ratio.categories,
+brands.non_wf,
+brands.wf_products
+FROM ratio
+INNER JOIN brands USING(CATEGORIES)
+;
+-- Additional Insights, How do proportions change for Gluten free products
+
+WITH ratio AS(
+ SELECT 
+ CASE WHEN category LIKE '%DAIRY%' THEN 'DAIRY AND EGGS'
+WHEN category LIKE '%PRODUCE%' THEN 'PRODUCE'
+WHEN category LIKE '%MEAT%' THEN 'MEAT'
+WHEN category LIKE '%PANT%' THEN 'PANTRY ESSENTIALS'
+WHEN category LIKE '%BREAD%' THEN 'BREAD ROLL BAKERY'
+WHEN category LIKE '%DESSERT%' THEN 'DESSERTS'
+WHEN category LIKE '%BODY%' THEN 'BODY CARE'
+WHEN category LIKE '%FROZEN%' THEN 'FROZEN FOOD'
+WHEN category LIKE '%SNACK%' THEN 'SNACKS CHIPS SALSA'
+WHEN category LIKE '%BEV%' THEN 'BEVERAGES'
+ELSE 'Not_signifcant' END AS categories,
+((COUNT(CASE WHEN (BRAND LIKE '%365%' OR BRAND LIKE '%WHOLE FOODS MARKET%')
+THEN ID ELSE NULL END))
+ /(COUNT(ID)))*100 AS ratio
+FROM bfmban_data
+WHERE glutenfree=1
+GROUP BY categories),
+
+BRANDS AS(
+SELECT 
+ CASE WHEN category LIKE '%DAIRY%' THEN 'DAIRY AND EGGS'
+WHEN category LIKE '%PRODUCE%' THEN 'PRODUCE'
+WHEN category LIKE '%MEAT%' THEN 'MEAT'
+WHEN category LIKE '%PANT%' THEN 'PANTRY ESSENTIALS'
+WHEN category LIKE '%BREAD%' THEN 'BREAD ROLL BAKERY'
+WHEN category LIKE '%DESSERT%' THEN 'DESSERTS'
+WHEN category LIKE '%BODY%' THEN 'BODY CARE'
+WHEN category LIKE '%FROZEN%' THEN 'FROZEN FOOD'
+WHEN category LIKE '%SNACK%' THEN 'SNACKS CHIPS SALSA'
+WHEN category LIKE '%BEV%' THEN 'BEVERAGES'
+ELSE 'Not_signifcant' END AS categories,
+COUNT(CASE WHEN (BRAND LIKE '%365%' OR BRAND LIKE '%WHOLE FOODS MARKET%') THEN ID ELSE NULL END)
+AS wf_products,
+COUNT(CASE WHEN (BRAND NOT LIKE '%365%'AND BRAND NOT LIKE '%WHOLE FOODS MARKET%') THEN ID ELSE NULL END) AS non_wf
+FROM bfmban_data
+WHERE GLUTENFREE=1
+GROUP BY CATEGORIES)
+
+
+SELECT 
+ratio.categories,
+ratio.ratio AS ratio_glutenfree,
+brands.non_wf,
+brands.wf_products
+FROM ratio
+INNER JOIN brands USING(CATEGORIES);
